@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>성경 대화 도우미 v1.0</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic",Arial,sans-serif;background:#f4f7fb;color:#111}
+body.dark{background:#111827;color:#f9fafb}
+header{background:#123c69;color:white;padding:18px 14px;text-align:center;position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:23px}
+header p{margin:8px 0 0;font-size:14px;opacity:.9}
+.wrap{max-width:760px;margin:0 auto;padding:14px}
+.langs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.lang{border:0;border-radius:14px;padding:14px 6px;font-size:16px;font-weight:900;background:white;color:#123c69;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.lang.active{background:#123c69;color:white}
+.panel{background:white;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.dark .panel,.dark .lang{background:#1f2937;color:#f9fafb}
+.notice{background:#fff6dc;border:1px solid #f1d38b;padding:12px;border-radius:14px;font-size:14px;line-height:1.6;margin-bottom:12px;color:#111}
+.num{display:inline-block;background:#e8f1fb;color:#123c69;font-weight:900;padding:6px 12px;border-radius:999px;margin-bottom:8px}
+.ko{font-size:20px;font-weight:900;line-height:1.65;margin:8px 0;white-space:pre-line}
+.local{font-size:23px;line-height:1.75;margin:12px 0;padding:12px;background:#f7f9fc;border-radius:12px;white-space:pre-line}
+.dark .local{background:#111827}
+.pron{font-size:15px;color:#555;line-height:1.7;margin-top:8px}
+.dark .pron{color:#cbd5e1}
+.btns,.nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{border:0;border-radius:12px;padding:12px 14px;font-size:16px;font-weight:900}
+.speak{background:#0b7a3b;color:white}
+.copy{background:#eceff3;color:#222}
+.stop{background:#c62828;color:white}
+.nav button{background:#123c69;color:white;flex:1}
+.tool{background:#6b7280;color:white}
+.big .ko{font-size:24px} .big .local{font-size:28px} .big .pron{font-size:18px}
+audio{width:100%;margin-top:8px;background:white;border-radius:12px}
+.footer{text-align:center;color:#666;font-size:13px;margin:20px 0}
+</style>
+</head>
+<body>
+<header>
+<h1>🌍 성경 대화 도우미</h1>
+<p>네팔어 · 힌디어 · 벵골어 / MP3 음성 포함</p>
+</header>
+<div class="wrap">
+<div class="langs">
+<button class="lang active" onclick="setLang('ne')">🇳🇵 네팔</button>
+<button class="lang" onclick="setLang('hi')">🇮🇳 인도</button>
+<button class="lang" onclick="setLang('bn')">🇧🇩 방글라데시</button>
+</div>
+<div class="notice">🔊 기계음 MP3 포함 버전입니다. GitHub에는 <b>index.html</b>과 <b>audio 폴더</b>를 함께 올리세요.</div>
+<audio id="player" controls></audio>
+<div class="btns">
+<button class="tool" onclick="toggleBig()">🔤 글자 크게</button>
+<button class="tool" onclick="toggleDark()">🌙 야간모드</button>
+<button class="stop" onclick="stopVoice()">■ 정지</button>
+</div>
+<div id="content"></div>
+<div class="nav">
+<button onclick="prevItem()">⬅️ 이전</button>
+<button onclick="nextItem()">다음 ➡️</button>
+</div>
+<div class="footer">Bible Conversation Helper v1.0</div>
+</div>
+<script>
+const data={"ne": {"name": "네팔어", "label": "🇳🇵 Nepal", "items": [{"ko": "안녕하세요! 저는 성경을 하느님이 주신 책으로 믿는 여호와의 증인의 한 사람입니다.", "local": "नमस्ते! म परमेश्वरले दिनुभएको पुस्तकको रूपमा बाइबलमा विश्वास गर्ने यहोवाको साक्षीहरूमध्ये एक हुँ।", "pron": "나마스떼! 마 파르메슈와르레 디누바예코 푸스타크코 루프마 바이벌마 비슈와스 거르네 예호바코 삭시하루마디예 엑 후."}, {"ko": "어느 나라에서 오셨나요?", "local": "तपाईं कुन देशबाट आउनुभएको हो?", "pron": "따빠이 꾼 데쉬바트 아우누바예코 호?"}, {"ko": "한국 생활은 어떠세요?", "local": "कोरियामा तपाईंको जीवन कस्तो छ?", "pron": "코리야마 따빠이코 지완 까스토 차?"}, {"ko": "혹시, 성경을 읽어 보신 적 있나요?", "local": "के तपाईंले कहिल्यै बाइबल पढ्नुभएको छ?", "pron": "께 따빠이늘레 까힐례 바이벌 빠드누바예코 차?"}, {"ko": "성경은 우리가 살아가면서 생기는 중요한 질문들에 대한 답을 알려줍니다.", "local": "बाइबलले जीवनका महत्त्वपूर्ण प्रश्नहरूको उत्तर दिन्छ।", "pron": "바이벌레 지완카 마하트워푸르나 프라슈나하루코 우타르 딘차."}, {"ko": "예를 들면, 사람이 죽으면 어떻게 되는가?", "local": "उदाहरणका लागि, मानिस मरेपछि के हुन्छ?", "pron": "우다하란카 라기, 마니스 마레파치 께 훈차?"}, {"ko": "하느님은 우리가 살고 있는 세상과 사람들에게 관심이 있으신가?", "local": "के परमेश्वरलाई हामी बसिरहेको संसार र मानिसहरूको साँच्चै चासो छ?", "pron": "께 파르메슈와르라이 하미 바시라헤코 산사르 라 마니스하루코 산차이 차소 차?"}, {"ko": "성경 계시록 21:3,4에서는 이렇게 알려줍니다.\n\n3 그때에 나는 왕좌에서 나오는 큰 음성이 이렇게 말하는 것을 들었다. “보아라! 하느님의 천막이 사람들과 함께 있다. 그분이 그들과 함께 거하실 것이며, 그들은 그분의 백성이 될 것이다. 하느님께서 친히 그들과 함께 계실 것이다.\n\n4 그분은 그들의 눈에서 모든 눈물을 닦아 주실 것이다. 더 이상 죽음이 없고, 슬픔과 부르짖음과 고통도 더는 없을 것이다. 이전 것들이 다 사라져 버린 것이다.”\n\n여기에서 하느님께서는 “더 이상 죽음이 없고, 슬픔과 부르짖음과 고통도 더는 없을 것입니다. 이전 것들은 모두 사라질 것입니다.”라고 약속하십니다. 정말 희망적인 약속이지 않습니까?", "local": "बाइबलको प्रकाश २१:३,४ मा यस्तो बताइएको छ:\n\n“हेर! परमेश्वरको बासस्थान मानिसहरूसँग छ। उहाँ तिनीहरूसँग बस्नुहुनेछ र तिनीहरू उहाँका मानिसहरू हुनेछन्। परमेश्वर आफै तिनीहरूसँग हुनुहुनेछ।\n\nउहाँले तिनीहरूका आँखाबाट सबै आँसु पुछिदिनुहुनेछ। अब मृत्यु हुनेछैन। शोक, रुवाइ र पीडा पनि हुनेछैन। पहिलेका कुराहरू बितिसकेका छन्।”\n\nयहाँ परमेश्वरले मृत्यु र पीडा नभएको संसारको प्रतिज्ञा गर्नुहुन्छ। यो साँच्चै आशादायी प्रतिज्ञा होइन र?", "pron": "바이벌코 프라카시 21:3,4 마 야스토 바타이에코 차. 헤르! 파르메슈와르코 바스스탄 마니스하루상 차... 야하 파르메슈와를레 미르튜 라 피다 나바예코 산사르코 프라티갸 거르누훈차."}, {"ko": "성경을 통해 하느님을 더 알아갈 수 있는 자료를 보내드리고 싶습니다. 괜찮으시다면 전화번호나 카카오톡을 알려주실 수 있을까요?", "local": "बाइबलमार्फत परमेश्वरबारे अझ धेरै जान्न मद्दत गर्ने सामग्री तपाईंलाई पठाउन चाहन्छु। यदि तपाईंलाई ठीक लाग्छ भने, तपाईंको फोन नम्बर वा काकाओटोक दिन सक्नुहुन्छ?", "pron": "바이벌마르파트 파르메슈와르바레 아즈 더레 자나 마닷 거르네 사마그리 따파일라이 파타우나 찬추. 야디 따파일라이 틱 락차 바네, 따파이코 폰 넘버 와 카카오톡 디나 삭누훈차?"}, {"ko": "감사합니다. 좋은 하루 보내세요.", "local": "धन्यवाद। तपाईंको दिन शुभ रहोस्।", "pron": "단야밧. 따빠이코 딘 슈브 라호스."}]}, "hi": {"name": "힌디어", "label": "🇮🇳 India", "items": [{"ko": "안녕하세요! 저는 성경을 하느님이 주신 책으로 믿는 여호와의 증인의 한 사람입니다.", "local": "नमस्ते! मैं यहोवा का एक साक्षी हूँ और मेरा विश्वास है कि बाइबल परमेश्वर द्वारा दी गई पुस्तक है।", "pron": "나마스떼! 메인 예호바 카 엑 삭시 훈, 아우르 메라 비슈와스 해 끼 바이벌 파르메슈와르 드와라 디 가이 푸스타크 해."}, {"ko": "어느 나라에서 오셨나요?", "local": "आप किस देश से आए हैं?", "pron": "압 끼스 데쉬 세 아예 해?"}, {"ko": "한국 생활은 어떠세요?", "local": "कोरिया में आपका जीवन कैसा है?", "pron": "코리야 메인 압카 지완 캐사 해?"}, {"ko": "혹시, 성경을 읽어 보신 적 있나요?", "local": "क्या आपने कभी बाइबल पढ़ी है?", "pron": "꺄 아프네 까비 바이벌 빠디 해?"}, {"ko": "성경은 우리가 살아가면서 생기는 중요한 질문들에 대한 답을 알려줍니다.", "local": "बाइबल जीवन के महत्वपूर्ण प्रश्नों के उत्तर देती है।", "pron": "바이벌 지완 께 마하트와푸르나 프라슈논 께 우타르 데티 해."}, {"ko": "예를 들면, 사람이 죽으면 어떻게 되는가?", "local": "उदाहरण के लिए, मरने के बाद क्या होता है?", "pron": "우다하란 께 리예, 마르네 께 바드 꺄 호타 해?"}, {"ko": "하느님은 우리가 살고 있는 세상과 사람들에게 관심이 있으신가?", "local": "क्या परमेश्वर को हमारी और इस दुनिया की सचमुच परवाह है?", "pron": "꺄 파르메슈와르 꼬 하마리 아우르 이스 두니야 키 사치무치 파르와 해?"}, {"ko": "성경 계시록 21:3,4에서는 이렇게 알려줍니다.\n\n3 그때에 나는 왕좌에서 나오는 큰 음성이 이렇게 말하는 것을 들었다. “보아라! 하느님의 천막이 사람들과 함께 있다. 그분이 그들과 함께 거하실 것이며, 그들은 그분의 백성이 될 것이다. 하느님께서 친히 그들과 함께 계실 것이다.\n\n4 그분은 그들의 눈에서 모든 눈물을 닦아 주실 것이다. 더 이상 죽음이 없고, 슬픔과 부르짖음과 고통도 더는 없을 것이다. 이전 것들이 다 사라져 버린 것이다.”\n\n여기에서 하느님께서는 “더 이상 죽음이 없고, 슬픔과 부르짖음과 고통도 더는 없을 것입니다. 이전 것들은 모두 사라질 것입니다.”라고 약속하십니다. 정말 희망적인 약속이지 않습니까?", "local": "बाइबल की किताब प्रकाशितवाक्य 21:3,4 में यह बताया गया है:\n\n“देखो! परमेश्वर का डेरा इंसानों के बीच है। वह उनके साथ रहेगा और वे उसके लोग होंगे। परमेश्वर खुद उनके साथ होगा।\n\nवह उनकी आँखों से हर आँसू पोंछ देगा। फिर न मौत रहेगी, न शोक, न रोना और न दर्द रहेगा। पुरानी बातें मिट चुकी हैं।”\n\nयहाँ परमेश्वर वादा करते हैं कि मौत और दुख नहीं रहेंगे। क्या यह सचमुच आशा देने वाला वादा नहीं है?", "pron": "바이벌 키 키탑 프라카시트와캬 21:3,4 메인 예 바타야 가야 해. 데코! 파르메슈와르 카 데라 인사논 케 비치 해... 야한 파르메슈와르 와다 카르테 해."}, {"ko": "성경을 통해 하느님을 더 알아갈 수 있는 자료를 보내드리고 싶습니다. 괜찮으시다면 전화번호나 카카오톡을 알려주실 수 있을까요?", "local": "मैं आपको बाइबल के ज़रिए परमेश्वर के बारे में और जानने में मदद करने वाली जानकारी भेजना चाहता हूँ। अगर आपको ठीक लगे, तो क्या आप अपना फोन नंबर या काकाओटॉक बता सकते हैं?", "pron": "메인 아프코 바이벌 케 자리예 파르메슈와르 케 바레 메인 아우르 잔네 메인 마닷 카르네 왈리 자나카리 베즈나 차하타 훈. 아가르 아프코 틱 라게, 토 꺄 압 아프나 폰 넘버 야 카카오톡 바타 삭테 해?"}, {"ko": "감사합니다. 좋은 하루 보내세요.", "local": "धन्यवाद। आपका दिन शुभ हो।", "pron": "단야바드. 압카 딘 슈브 호."}]}, "bn": {"name": "벵골어", "label": "🇧🇩 Bangladesh", "items": [{"ko": "안녕하세요! 저는 성경을 하느님이 주신 책으로 믿는 여호와의 증인의 한 사람입니다.", "local": "নমস্কার! আমি যিহোবার একজন সাক্ষি। আমি বিশ্বাস করি, বাইবেল হলো ঈশ্বরের দেওয়া বই।", "pron": "노모스카르! 아미 지호바르 엑존 삭키. 아미 비슈와스 코리, 바이벨 홀로 이슈워레르 데오아 보이."}, {"ko": "어느 나라에서 오셨나요?", "local": "আপনি কোন দেশ থেকে এসেছেন?", "pron": "압니 콘 데쉬 테케 에셰첸?"}, {"ko": "한국 생활은 어떠세요?", "local": "কোরিয়ায় আপনার জীবন কেমন চলছে?", "pron": "코리야이 압나르 지본 케몬 촐체?"}, {"ko": "혹시, 성경을 읽어 보신 적 있나요?", "local": "আপনি কি কখনও বাইবেল পড়েছেন?", "pron": "압니 끼 코코노 바이벨 포레첸?"}, {"ko": "성경은 우리가 살아가면서 생기는 중요한 질문들에 대한 답을 알려줍니다.", "local": "বাইবেল জীবনের গুরুত্বপূর্ণ প্রশ্নগুলোর উত্তর দেয়।", "pron": "바이벨 지보네르 구루토푸르노 프로슈노굴로르 우토르 데이."}, {"ko": "예를 들면, 사람이 죽으면 어떻게 되는가?", "local": "উদাহরণস্বরূপ, মানুষ মারা গেলে কী হয়?", "pron": "우다하론쇼룹, 마누시 마라 겔레 끼 호이?"}, {"ko": "하느님은 우리가 살고 있는 세상과 사람들에게 관심이 있으신가?", "local": "ঈশ্বর কি আমাদের এবং আমরা যে পৃথিবীতে বাস করি, সে সম্পর্কে সত্যিই যত্নশীল?", "pron": "이슈워르 끼 아마데르 에봉 암라 제 프리티비테 바스 코리, 셰 쇼므포르케 쇼티이 조트노실?"}, {"ko": "성경 계시록 21:3,4에서는 이렇게 알려줍니다.\n\n3 그때에 나는 왕좌에서 나오는 큰 음성이 이렇게 말하는 것을 들었다. “보아라! 하느님의 천막이 사람들과 함께 있다. 그분이 그들과 함께 거하실 것이며, 그들은 그분의 백성이 될 것이다. 하느님께서 친히 그들과 함께 계실 것이다.\n\n4 그분은 그들의 눈에서 모든 눈물을 닦아 주실 것이다. 더 이상 죽음이 없고, 슬픔과 부르짖음과 고통도 더는 없을 것이다. 이전 것들이 다 사라져 버린 것이다.”\n\n여기에서 하느님께서는 “더 이상 죽음이 없고, 슬픔과 부르짖음과 고통도 더는 없을 것입니다. 이전 것들은 모두 사라질 것입니다.”라고 약속하십니다. 정말 희망적인 약속이지 않습니까?", "local": "বাইবেলের প্রকাশিত বাক্য ২১:৩,৪ পদে বলা হয়েছে:\n\n“দেখো! ঈশ্বরের তাঁবু মানুষের সঙ্গে আছে। তিনি তাদের সঙ্গে বাস করবেন এবং তারা তাঁর লোক হবে। ঈশ্বর নিজে তাদের সঙ্গে থাকবেন।\n\nতিনি তাদের চোখের সমস্ত জল মুছে দেবেন। মৃত্যু আর থাকবে না, শোক, কান্না ও ব্যথাও আর থাকবে না। আগের বিষয়গুলো চলে গেছে।”\n\nএখানে ঈশ্বর প্রতিশ্রুতি দিচ্ছেন যে মৃত্যু ও কষ্ট আর থাকবে না। এটা সত্যিই আশার কথা, তাই না?", "pron": "바이벨레르 프로카시토 바키 21:3,4 포데 볼라 호예체. 데코! 이슈워레르 탬부 마누셰르 쇼ঙ্গে 아체... 에카네 이슈워르 프로티슈루티 디첸."}, {"ko": "성경을 통해 하느님을 더 알아갈 수 있는 자료를 보내드리고 싶습니다. 괜찮으시다면 전화번호나 카카오톡을 알려주실 수 있을까요?", "local": "বাইবেলের মাধ্যমে ঈশ্বরকে আরও ভালোভাবে জানতে সাহায্য করবে এমন কিছু তথ্য আপনাকে পাঠাতে চাই। যদি আপনার আপত্তি না থাকে, আপনার ফোন নম্বর বা কাকাওটক দিতে পারবেন?", "pron": "바이벨레르 마드호메 이슈워케 아로 발로바베 잔테 사하조 코르베 에몬 키추 토토 압나케 파타테 차이. 조디 압나르 아폿티 나 타케, 압나르 폰 넘버 바 카카오톡 디테 파르벤?"}, {"ko": "감사합니다. 좋은 하루 보내세요.", "local": "ধন্যবাদ। আপনার দিনটি ভালো কাটুক।", "pron": "돈노바드. 압나르 딘티 발로 카툭."}]}};
+let current="ne", index=0, isBig=false, isDark=false;
+function setLang(code){current=code;index=0;document.querySelectorAll(".lang").forEach((b,i)=>b.classList.toggle("active",["ne","hi","bn"][i]===code));render();}
+function render(){
+ const item=data[current].items[index];
+ const el=document.getElementById("content");
+ el.innerHTML=`<div class="panel"><span class="num">${index+1} / ${data[current].items.length}</span>
+ <div class="ko">${esc(item.ko)}</div>
+ <div class="local">${esc(item.local)}</div>
+ <div class="pron">한글 발음: ${esc(item.pron)}</div>
+ <div class="btns"><button class="speak" onclick="playVoice()">🔊 듣기</button><button class="copy" onclick="copyLocal()">📋 현지어 복사</button></div></div>`;
+}
+function playVoice(){
+ const p=document.getElementById("player");
+ p.src=`audio/${current}/${String(index+1).padStart(2,'0')}.mp3`;
+ p.play().catch(()=>alert("재생이 막혔습니다. 화면의 플레이어 ▶ 버튼을 눌러주세요."));
+}
+function stopVoice(){const p=document.getElementById("player");p.pause();p.currentTime=0;}
+function prevItem(){if(index>0) index--; render(); window.scrollTo(0,0);}
+function nextItem(){if(index<data[current].items.length-1) index++; render(); window.scrollTo(0,0);}
+function copyLocal(){navigator.clipboard.writeText(data[current].items[index].local).then(()=>alert("복사되었습니다."));}
+function toggleBig(){isBig=!isBig;document.body.classList.toggle("big",isBig);}
+function toggleDark(){isDark=!isDark;document.body.classList.toggle("dark",isDark);}
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+render();
+</script>
+</body>
+</html>
